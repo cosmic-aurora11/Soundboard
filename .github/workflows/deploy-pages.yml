@@ -26,7 +26,9 @@ jobs:
           node-version: 24
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        # Vite's optional native bindings currently expose peer metadata that
+        # npm can reject on a clean Linux runner even though the locked tree is valid.
+        run: npm ci --legacy-peer-deps
       - name: Run tests
         run: npm run test:run
       - name: Build site
