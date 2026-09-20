@@ -78,7 +78,7 @@ function App() {
   function updateVolume(volume: number) {
     playerRef.current?.setMasterVolume(volume)
     setPlayback((current) => ({ ...current, savedVolume: volume }))
-    setBoard((current) => ({ ...current, settings: { volume } }))
+    setBoard((current) => ({ ...current, settings: { ...current.settings, volume } }))
   }
 
   function selectPad(pad: MusicPad) {
@@ -95,7 +95,7 @@ function App() {
     playerRef.current?.selectPad(pad)
   }
 
-  function savePad(values: { label: string; url: string; videoId: string; scenarioId: string }) {
+  function savePad(values: { label: string; url: string; videoId: string; startSeconds: number; scenarioId: string }) {
     setBoard((current) => {
       if (padDialog?.padId) {
         const existing = current.pads[padDialog.padId]
@@ -122,6 +122,7 @@ function App() {
               label: values.label,
               originalUrl: values.url,
               videoId: values.videoId,
+              startSeconds: values.startSeconds,
               scenarioId: values.scenarioId,
             },
           },
@@ -134,6 +135,7 @@ function App() {
         label: values.label,
         originalUrl: values.url,
         videoId: values.videoId,
+        startSeconds: values.startSeconds,
         scenarioId: values.scenarioId,
         starred: false,
       }
@@ -446,7 +448,7 @@ function App() {
         <section className="control-deck" aria-labelledby="now-playing-title">
           <div className="player-bay">
             <div className="hardware-label"><span>YT–01</span><span>Visible source player</span></div>
-            <YouTubePlayer ref={playerRef} volume={board.settings.volume} onSnapshot={handleSnapshot} />
+            <YouTubePlayer ref={playerRef} volume={board.settings.volume} fadeSeconds={board.settings.fadeSeconds ?? 0.8} onSnapshot={handleSnapshot} />
           </div>
 
           <div className="now-playing-panel">
@@ -518,7 +520,18 @@ function App() {
             </div>
 
             <div className="deck-footer">
-              <span>800ms fade circuit</span>
+              <label className="fade-control" title="Duration of each fade out and fade in. Set to 0 for an instant transition.">
+                <span>Fade time (seconds)</span>
+                <input type="number" min="0" step="0.1" aria-label="Fade time (seconds)"
+                  value={board.settings.fadeSeconds ?? 0.8}
+                  onChange={(event) => {
+                    const fadeSeconds = Number(event.target.value)
+                    if (Number.isFinite(fadeSeconds) && fadeSeconds >= 0) {
+                      setBoard((current) => ({ ...current, settings: { ...current.settings, fadeSeconds } }))
+                    }
+                  }} />
+                <span>per fade · 0 = off</span>
+              </label>
               <span>Local memory armed</span>
             </div>
           </div>

@@ -1,7 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react'
 import type { MusicPad, PlayerSnapshot, PlayerStatus } from '../types'
 
-const FADE_DURATION_MS = 800
 
 export interface YouTubePlayerHandle {
   selectPad: (pad: MusicPad) => void
@@ -12,6 +11,7 @@ export interface YouTubePlayerHandle {
 
 interface YouTubePlayerProps {
   volume: number
+  fadeSeconds: number
   onSnapshot: (snapshot: PlayerSnapshot) => void
 }
 
@@ -43,10 +43,12 @@ function loadYouTubeApi(): Promise<typeof YT> {
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  function YouTubePlayer({ volume, onSnapshot }, ref) {
+  function YouTubePlayer({ volume, fadeSeconds, onSnapshot }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const playerRef = useRef<YT.Player | null>(null)
     const volumeRef = useRef(volume)
+    const fadeDurationRef = useRef(fadeSeconds * 1000)
+    useEffect(() => { fadeDurationRef.current = fadeSeconds * 1000 }, [fadeSeconds])
     const snapshotRef = useRef<PlayerSnapshot>({
       activePadId: null,
       pendingPadId: null,
@@ -135,7 +137,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
                     currentError: null,
                   })
                   const operation = operationRef.current
-                  void fadeTo(volumeRef.current, FADE_DURATION_MS, operation)
+                  void fadeTo(volumeRef.current, fadeDurationRef.current, operation)
                 } else if (status === 'stopped' && event.data === 0) {
                   emit({ activePadId: null, pendingPadId: null, status })
                 } else {
@@ -197,12 +199,12 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         const loadSelection = () => {
           if (operation !== operationRef.current) return
           player.setVolume(0)
-          player.loadVideoById(pad.videoId)
+          player.loadVideoById({ videoId: pad.videoId, startSeconds: pad.startSeconds ?? 0 })
         }
 
         const hasCurrentTrack = snapshotRef.current.activePadId !== null
         if (hasCurrentTrack && player.getPlayerState() !== 0) {
-          void fadeTo(0, FADE_DURATION_MS, operation).then((completed) => {
+          void fadeTo(0, fadeDurationRef.current, operation).then((completed) => {
             if (completed) loadSelection()
           })
         } else {
@@ -222,7 +224,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         if (!player) return
         const operation = cancelMotion()
         emit({ pendingPadId: null, currentError: null })
-        void fadeTo(0, FADE_DURATION_MS, operation).then((completed) => {
+        void fadeTo(0, fadeDurationRef.current, operation).then((completed) => {
           if (!completed) return
           player.stopVideo()
           player.setVolume(volumeRef.current)

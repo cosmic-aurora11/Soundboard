@@ -29,7 +29,7 @@ declare global {
 
     class Player {
       constructor(elementId: string | HTMLElement, options: PlayerOptions)
-      loadVideoById(videoId: string): void
+      loadVideoById(video: string | { videoId: string; startSeconds: number }): void
       playVideo(): void
       pauseVideo(): void
       stopVideo(): void

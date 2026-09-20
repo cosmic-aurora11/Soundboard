@@ -50,6 +50,28 @@ describe('board editing workflow', () => {
     expect(screen.queryByRole('button', { name: /edit boss arrival/i })).not.toBeInTheDocument()
   })
 
+  it('persists start times and a shared fade setting independently of volume', () => {
+    render(<App />)
+    fireEvent.change(screen.getByLabelText('Fade time (seconds)'), { target: { value: '2.5' } })
+    fireEvent.change(screen.getByLabelText('Master volume'), { target: { value: '50' } })
+    fireEvent.click(screen.getByRole('button', { name: /edit board/i }))
+    fireEvent.click(screen.getAllByRole('button', { name: /assign music/i })[0])
+    expect(screen.getByLabelText('Start time (seconds)')).toHaveValue(0)
+    fireEvent.change(screen.getByLabelText(/pad label/i), { target: { value: 'Timed cue' } })
+    fireEvent.change(screen.getByLabelText(/youtube video/i), { target: { value: 'https://youtu.be/M7lc1UVf-VE' } })
+    fireEvent.change(screen.getByLabelText('Start time (seconds)'), { target: { value: '90' } })
+    fireEvent.click(screen.getByRole('button', { name: /assign pad/i }))
+    fireEvent.click(screen.getByRole('button', { name: /edit timed cue/i }))
+    expect(screen.getByLabelText('Start time (seconds)')).toHaveValue(90)
+    fireEvent.change(screen.getByLabelText('Start time (seconds)'), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }))
+    const saved = JSON.parse(localStorage.getItem('resonance-board:v2')!)
+    expect(saved.settings).toEqual({ volume: 50, fadeSeconds: 2.5 })
+    expect(Object.values(saved.pads)).toEqual([expect.objectContaining({ startSeconds: 0 })])
+    fireEvent.change(screen.getByLabelText('Fade time (seconds)'), { target: { value: '0' } })
+    expect(JSON.parse(localStorage.getItem('resonance-board:v2')!).settings.fadeSeconds).toBe(0)
+  })
+
   it('adds, edits, reorders, and deletes a scenario', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /edit board/i }))

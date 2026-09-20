@@ -9,11 +9,12 @@ interface PadDialogProps {
   pad?: MusicPad
   initialScenarioId: string
   onClose: () => void
-  onSave: (values: { label: string; url: string; videoId: string; scenarioId: string }) => void
+  onSave: (values: { label: string; url: string; videoId: string; startSeconds: number; scenarioId: string }) => void
 }
 
 export function PadDialog({ scenarios, pad, initialScenarioId, onClose, onSave }: PadDialogProps) {
   const [label, setLabel] = useState(pad?.label ?? '')
+  const [startSeconds, setStartSeconds] = useState(String(pad?.startSeconds ?? 0))
   const [url, setUrl] = useState(pad?.originalUrl ?? '')
   const [scenarioId, setScenarioId] = useState(pad?.scenarioId ?? initialScenarioId)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +35,12 @@ export function PadDialog({ scenarios, pad, initialScenarioId, onClose, onSave }
       setError(parsed.error)
       return
     }
-    onSave({ label: label.trim(), url: url.trim(), videoId: parsed.videoId, scenarioId })
+    const start = Number(startSeconds)
+    if (!Number.isFinite(start) || start < 0) {
+      setError('Start time must be zero or a positive number of seconds.')
+      return
+    }
+    onSave({ startSeconds: start, label: label.trim(), url: url.trim(), videoId: parsed.videoId, scenarioId })
   }
 
   return (
@@ -79,6 +85,12 @@ export function PadDialog({ scenarios, pad, initialScenarioId, onClose, onSave }
             </small>
           </label>
 
+          <label>
+            <span>Start time (seconds)</span>
+            <input type="number" min="0" step="any" aria-label="Start time (seconds)" value={startSeconds}
+              onChange={(event) => setStartSeconds(event.target.value)} aria-describedby="start-help" />
+            <small id="start-help">Optional. Leave at 0 to start at the beginning; 90 starts at 1:30.</small>
+          </label>
           <label>
             <span>Scenario</span>
             <select value={scenarioId} onChange={(event) => setScenarioId(event.target.value)}>

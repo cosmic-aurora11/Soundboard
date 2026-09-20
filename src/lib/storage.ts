@@ -41,6 +41,8 @@ function hasValidBoardStructure(
   if (!Array.isArray(value.scenarios) || !isRecord(value.pads)) return false
   if (!isRecord(value.settings) || !isValidVolume(value.settings.volume)) return false
 
+  if (value.settings.fadeSeconds !== undefined && !isNonNegativeNumber(value.settings.fadeSeconds)) return false
+
   const scenarios = value.scenarios
   const scenarioIds = new Set<string>()
   const referencedPadIds = new Set<string>()
@@ -142,6 +144,7 @@ function isMusicPad(value: unknown): value is MusicPad {
     isNonEmptyString(value.label) &&
     isNonEmptyString(value.originalUrl) &&
     /^[A-Za-z0-9_-]{11}$/.test(String(value.videoId)) &&
+    (value.startSeconds === undefined || isNonNegativeNumber(value.startSeconds)) &&
     isNonEmptyString(value.scenarioId) &&
     typeof value.starred === 'boolean'
   )
@@ -154,6 +157,7 @@ function isLegacyMusicPad(value: unknown): value is LegacyMusicPad {
     isNonEmptyString(value.label) &&
     isNonEmptyString(value.originalUrl) &&
     /^[A-Za-z0-9_-]{11}$/.test(String(value.videoId)) &&
+    (value.startSeconds === undefined || isNonNegativeNumber(value.startSeconds)) &&
     isNonEmptyString(value.scenarioId) &&
     value.starred === undefined
   )
@@ -173,4 +177,8 @@ function isHexColor(value: unknown): value is string {
 
 function isValidVolume(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }

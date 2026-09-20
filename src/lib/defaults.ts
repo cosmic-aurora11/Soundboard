@@ -15,7 +15,7 @@ export function createDefaultBoard(): BoardState {
     schemaVersion: SCHEMA_VERSION,
     scenarios: DEFAULT_SCENARIOS.map((scenario) => ({ ...scenario, padIds: [] })),
     pads: {},
-    settings: { volume: 72 },
+    settings: { volume: 72, fadeSeconds: 0.8 },
   }
 }
 

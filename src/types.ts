@@ -14,10 +14,12 @@ export interface MusicPad {
   originalUrl: string
   videoId: string
   scenarioId: string
+  startSeconds?: number
   starred: boolean
 }
 
 export interface PlaybackSettings {
+  fadeSeconds?: number
   volume: number
 }
 
